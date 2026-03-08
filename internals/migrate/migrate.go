@@ -14,16 +14,18 @@ var schemas = []string{
 		email VARCHAR(150) NOT NULL UNIQUE,
 		email_verified_at TIMESTAMP NULL,
 		password VARCHAR(256) NOT NULL,
+		profile_image VARCHAR(300) NULL,
 		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMP NULL
 	)`,
-	`CREATE TABLE IF NOT EXISTS posts (
+	`CREATE TABLE IF NOT EXISTS blogs (
 		id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
 		title TEXT,
 		description TEXT,
 		tags VARCHAR(255),
 		author BIGINT UNSIGNED,
 		banner VARCHAR(150),
+		likes INT DEFAULT 0,
 		published BOOLEAN DEFAULT FALSE,
 		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMP NULL,
@@ -36,6 +38,17 @@ var schemas = []string{
 		FOREIGN KEY (user_id) REFERENCES users(id)
 		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMP NULL,
+	)`,
+	`CREATE TABLE IF NOT EXISTS blog_comments (
+		id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+		blog_id BIGINT UNSIGNED,
+		user_id BIGINT UNSIGNED,
+		comment TEXT,
+		likes INT DEFAULT 0,
+		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+		updated_at TIMESTAMP NULL,
+		FOREIGN KEY (blog_id) REFERENCES blogs(id),
+		FOREIGN KEY (user_id) REFERENCES users(id)
 	)`,
 }
 

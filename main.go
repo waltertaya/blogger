@@ -27,6 +27,25 @@ func main() {
 	mux.Handle("/api/v1/request-verification", middlewares.AuthMiddleware(http.HandlerFunc(handlers.RequestNewEmailVerification)))
 	mux.Handle("/api/v1/reset-password", middlewares.AuthMiddleware(http.HandlerFunc(handlers.ResetPassword)))
 	mux.Handle("/api/v1/me", middlewares.AuthMiddleware(http.HandlerFunc(handlers.Profile)))
+	mux.Handle("/api/v1/me/update", middlewares.AuthMiddleware(http.HandlerFunc(handlers.UpdateProfileHandler)))
+	mux.Handle("/api/v1/me/deactivate", middlewares.AuthMiddleware(http.HandlerFunc(handlers.DeactivateAccountHandler)))
+
+	mux.Handle("/api/v1/blogs/create", middlewares.AuthMiddleware(http.HandlerFunc(handlers.CreateBlogHandler)))
+	mux.Handle("/api/v1/blogs/publish", middlewares.AuthMiddleware(http.HandlerFunc(handlers.PublishBlogHandler)))
+	mux.Handle("/api/v1/blogs/update", middlewares.AuthMiddleware(http.HandlerFunc(handlers.UpdateBlogHandler)))
+	mux.Handle("/api/v1/blogs/delete", middlewares.AuthMiddleware(http.HandlerFunc(handlers.DeleteBlogHandler)))
+	mux.Handle("/api/v1/blogs/comment", middlewares.AuthMiddleware(http.HandlerFunc(handlers.CommentOnBlogHandler)))
+	mux.HandleFunc("/api/v1/blogs/one", handlers.GetBlogByIDHandler)
+	mux.HandleFunc("/api/v1/blogs/author", handlers.GetAuthorBlogsHandler)
+	mux.HandleFunc("/api/v1/blogs", handlers.GetAllBlogsHandler)
+	mux.HandleFunc("/api/v1/blogs/trending", handlers.GetTrendingBlogsHandler)
+	mux.HandleFunc("/api/v1/blogs/tag", handlers.GetBlogsByTagHandler)
+	mux.HandleFunc("/api/v1/blogs/recent", handlers.GetRecentBlogsHandler)
+	mux.HandleFunc("/api/v1/blogs/like", handlers.LikeBlogHandler)
+	mux.HandleFunc("/api/v1/users/profile", handlers.GetAnotherUserProfileHandler)
+
+	resources := http.StripPrefix("/resources/", http.FileServer(http.Dir("internals/resources")))
+	mux.Handle("/resources/", resources)
 
 	handler := middlewares.CORSMiddleware(
 		middlewares.LoggingMiddleware(mux),
