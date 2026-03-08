@@ -14,9 +14,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/waltertaya/blogging-app/internals/db"
-	"github.com/waltertaya/blogging-app/internals/helpers"
-	"github.com/waltertaya/blogging-app/internals/models"
+	"github.com/waltertaya/blogger/internals/db"
+	"github.com/waltertaya/blogger/internals/helpers"
+	"github.com/waltertaya/blogger/internals/models"
 )
 
 const (

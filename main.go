@@ -5,10 +5,10 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/waltertaya/blogging-app/internals/db"
-	"github.com/waltertaya/blogging-app/internals/handlers"
-	"github.com/waltertaya/blogging-app/internals/initialisers"
-	"github.com/waltertaya/blogging-app/internals/middlewares"
+	"github.com/waltertaya/blogger/internals/db"
+	"github.com/waltertaya/blogger/internals/handlers"
+	"github.com/waltertaya/blogger/internals/initialisers"
+	"github.com/waltertaya/blogger/internals/middlewares"
 )
 
 func init() {

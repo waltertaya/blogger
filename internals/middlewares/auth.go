@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/waltertaya/blogging-app/internals/helpers"
+	"github.com/waltertaya/blogger/internals/helpers"
 )
 
 func AuthMiddleware(next http.Handler) http.Handler {
@@ -13,14 +13,14 @@ func AuthMiddleware(next http.Handler) http.Handler {
 
 		if err != nil {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
-			return 
+			return
 		}
 
 		claims, err := helpers.VerifyJWT(cookie.Value)
 
 		if err != nil {
 			http.Error(w, "Invalid token", http.StatusUnauthorized)
-			return 
+			return
 		}
 
 		ctx := context.WithValue(r.Context(), "userID", claims.UserID)

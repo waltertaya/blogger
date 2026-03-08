@@ -10,8 +10,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/waltertaya/blogging-app/internals/db"
-	"github.com/waltertaya/blogging-app/internals/models"
+	"github.com/waltertaya/blogger/internals/models"
+	"github.com/waltertaya/blogger/internals/db"
 )
 
 const (
