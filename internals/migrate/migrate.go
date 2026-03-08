@@ -15,9 +15,11 @@ var schemas = []string{
 		email_verified_at TIMESTAMP NULL,
 		password VARCHAR(256) NOT NULL,
 		profile_image VARCHAR(300) NULL,
+		profile_description TEXT NULL,
 		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMP NULL
 	)`,
+	`ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_description TEXT NULL`,
 	`CREATE TABLE IF NOT EXISTS blogs (
 		id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
 		title TEXT,

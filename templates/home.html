@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Blogger — Home</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/resources/css/home.css"/>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="/" class="nav-logo">Blogger</a>
+  <div class="nav-search">
+    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="text" placeholder="Search stories…"/>
+  </div>
+  <div class="nav-actions">
+    <a href="#" class="btn-write">+ Write</a>
+    <div class="nav-avatar">
+      <img src="https://i.pravatar.cc/100?img=12" alt="You"/>
+    </div>
+  </div>
+</nav>
+
+<!-- PAGE LAYOUT -->
+<div class="page-wrap">
+
+  <!-- SIDEBAR LEFT -->
+  <aside class="sidebar-left">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Feed</div>
+      <a href="#" class="sidebar-link active">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+        All Posts
+      </a>
+      <a href="#" class="sidebar-link">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Following
+      </a>
+      <a href="#" class="sidebar-link">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        Bookmarks
+      </a>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Topics</div>
+      <div class="tag-list">
+        <span class="tag-pill active" onclick="filterTag(this)">All</span>
+        <span class="tag-pill" onclick="filterTag(this)">Tech</span>
+        <span class="tag-pill" onclick="filterTag(this)">Culture</span>
+        <span class="tag-pill" onclick="filterTag(this)">Design</span>
+        <span class="tag-pill" onclick="filterTag(this)">Science</span>
+        <span class="tag-pill" onclick="filterTag(this)">Health</span>
+        <span class="tag-pill" onclick="filterTag(this)">Travel</span>
+        <span class="tag-pill" onclick="filterTag(this)">Finance</span>
+        <span class="tag-pill" onclick="filterTag(this)">Food</span>
+        <span class="tag-pill" onclick="filterTag(this)">Art</span>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Account</div>
+      <a href="#" class="sidebar-link">My Posts</a>
+      <a href="#" class="sidebar-link">Settings</a>
+      <a href="/" class="sidebar-link">Sign Out</a>
+    </div>
+  </aside>
+
+  <!-- MAIN FEED -->
+  <main class="main-feed">
+
+    <!-- TRENDING -->
+    <div class="feed-section-head">
+      <h2>🔥 Trending</h2>
+      <a href="#">View all</a>
+    </div>
+    <div class="trending-row" id="trending-blogs">
+
+      <div class="trending-card">
+        <div class="trending-num">01</div>
+        <h4>Good design is mostly about what you remove</h4>
+        <div class="blog-card-meta" style="margin-bottom:0">
+          <div class="blog-avatar"><img src="https://i.pravatar.cc/100?img=5" alt=""/></div>
+          <span class="blog-author-name">Riku T.</span>
+          <span class="blog-date">Mar 5</span>
+        </div>
+        <div class="blog-card-footer">
+          <span class="read-time">4 min read</span>
+          <button class="action-btn" onclick="toggleLike(this)">♥ <span>331</span></button>
+          <button class="action-btn">💬 57</button>
+        </div>
+      </div>
+
+      <div class="trending-card">
+        <div class="trending-num">02</div>
+        <h4>The loneliness of knowing too much about a topic</h4>
+        <div class="blog-card-meta" style="margin-bottom:0">
+          <div class="blog-avatar"><img src="https://i.pravatar.cc/100?img=9" alt=""/></div>
+          <span class="blog-author-name">Adaeze N.</span>
+          <span class="blog-date">Mar 3</span>
+        </div>
+        <div class="blog-card-footer">
+          <span class="read-time">6 min read</span>
+          <button class="action-btn" onclick="toggleLike(this)">♥ <span>204</span></button>
+          <button class="action-btn">💬 41</button>
+        </div>
+      </div>
+
+      <div class="trending-card">
+        <div class="trending-num">03</div>
+        <h4>The quiet art of writing slowly in a fast world</h4>
+        <div class="blog-card-meta" style="margin-bottom:0">
+          <div class="blog-avatar"><img src="https://i.pravatar.cc/100?img=47" alt=""/></div>
+          <span class="blog-author-name">Elena M.</span>
+          <span class="blog-date">Feb 28</span>
+        </div>
+        <div class="blog-card-footer">
+          <span class="read-time">6 min read</span>
+          <button class="action-btn" onclick="toggleLike(this)">♥ <span>512</span></button>
+          <button class="action-btn">💬 88</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RECENT -->
+    <div class="feed-section-head">
+      <h2>🕓 Recent</h2>
+      <a href="#">View all</a>
+    </div>
+    <div id="recent-blogs">
+
+      <!-- Card 1 -->
+      <div class="blog-card" id="card-1">
+        <div class="blog-card-inner">
+          <div class="blog-card-meta">
+            <div class="blog-avatar"><img src="https://i.pravatar.cc/100?img=12" alt=""/></div>
+            <span class="blog-author-name">James O.</span>
+            <span class="blog-date">· Mar 7, 2025</span>
+            <span class="blog-tag-inline">Technology</span>
+          </div>
+          <h3>Why I deleted every productivity app and wrote a paper list</h3>
+          <p>There's something the app makers won't tell you — paper still wins for the things that actually matter. I tried every system, app, and method. Then I quit them all.</p>
+          <div class="blog-card-footer">
+            <span class="read-time">5 min read</span>
+            <button class="action-btn" onclick="toggleLike(this)">♥ <span>118</span></button>
+            <button class="action-btn" onclick="toggleComments('card-1')">💬 <span>23</span></button>
+          </div>
+        </div>
+        <div class="comments-panel" id="comments-card-1">
+          <div class="comment-head">Comments (23)</div>
+          <div class="comment-item">
+            <div class="comment-avt"><img src="https://i.pravatar.cc/100?img=32" alt=""/></div>
+            <div class="comment-body">
+              <div class="comment-user">Sarah K.</div>
+              <div class="comment-text">This resonated so deeply. I threw out Notion last month and haven't looked back.</div>
+            </div>
+          </div>
+          <div class="comment-item">
+            <div class="comment-avt"><img src="https://i.pravatar.cc/100?img=15" alt=""/></div>
+            <div class="comment-body">
+              <div class="comment-user">Dev P.</div>
+              <div class="comment-text">Bold take, but honestly, the tactile feeling of crossing things off is unmatched.</div>
+            </div>
+          </div>
+          <div class="comment-item">
+            <div class="comment-avt"><img src="https://i.pravatar.cc/100?img=22" alt=""/></div>
+            <div class="comment-body">
+              <div class="comment-user">Liu W.</div>
+              <div class="comment-text">The irony of reading this on my phone is not lost on me.</div>
+            </div>
+          </div>
+          <div class="comment-input-row">
+            <input type="text" placeholder="Add a comment…" id="input-card-1"/>
+            <button class="comment-submit" onclick="addComment('card-1')">Post</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 2 -->
+      <div class="blog-card" id="card-2">
+        <div class="blog-card-inner">
+          <div class="blog-card-meta">
+            <div class="blog-avatar"><img src="https://i.pravatar.cc/100?img=9" alt=""/></div>
+            <span class="blog-author-name">Adaeze N.</span>
+            <span class="blog-date">· Mar 5, 2025</span>
+            <span class="blog-tag-inline">Culture</span>
+          </div>
+          <h3>The loneliness of knowing too much about a topic</h3>
+          <p>Expertise can be isolating. A meditation on what we lose when we go deeper than those around us — and what we gain when we find people who understand.</p>
+          <div class="blog-card-footer">
+            <span class="read-time">6 min read</span>
+            <button class="action-btn" onclick="toggleLike(this)">♥ <span>204</span></button>
+            <button class="action-btn" onclick="toggleComments('card-2')">💬 <span>41</span></button>
+          </div>
+        </div>
+        <div class="comments-panel" id="comments-card-2">
+          <div class="comment-head">Comments (41)</div>
+          <div class="comment-item">
+            <div class="comment-avt"><img src="https://i.pravatar.cc/100?img=33" alt=""/></div>
+            <div class="comment-body">
+              <div class="comment-user">Marco L.</div>
+              <div class="comment-text">Genuinely one of the most honest pieces I've read this year. Shared with my entire team.</div>
+            </div>
+          </div>
+          <div class="comment-item">
+            <div class="comment-avt"><img src="https://i.pravatar.cc/100?img=44" alt=""/></div>
+            <div class="comment-body">
+              <div class="comment-user">Priya S.</div>
+              <div class="comment-text">The part about finding your "people" later in life hit differently. Thank you for writing this.</div>
+            </div>
+          </div>
+          <div class="comment-input-row">
+            <input type="text" placeholder="Add a comment…" id="input-card-2"/>
+            <button class="comment-submit" onclick="addComment('card-2')">Post</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 3 -->
+      <div class="blog-card" id="card-3">
+        <div class="blog-card-inner">
+          <div class="blog-card-meta">
+            <div class="blog-avatar"><img src="https://i.pravatar.cc/100?img=5" alt=""/></div>
+            <span class="blog-author-name">Riku T.</span>
+            <span class="blog-date">· Mar 3, 2025</span>
+            <span class="blog-tag-inline">Design</span>
+          </div>
+          <h3>Good design is mostly about what you remove</h3>
+          <p>Every great design decision I've ever made was subtractive. Adding more is easy. Knowing what to take away requires courage, taste, and discipline.</p>
+          <div class="blog-card-footer">
+            <span class="read-time">4 min read</span>
+            <button class="action-btn" onclick="toggleLike(this)">♥ <span>331</span></button>
+            <button class="action-btn" onclick="toggleComments('card-3')">💬 <span>57</span></button>
+          </div>
+        </div>
+        <div class="comments-panel" id="comments-card-3">
+          <div class="comment-head">Comments (57)</div>
+          <div class="comment-item">
+            <div class="comment-avt"><img src="https://i.pravatar.cc/100?img=60" alt=""/></div>
+            <div class="comment-body">
+              <div class="comment-user">Anya B.</div>
+              <div class="comment-text">This is the best one-liner about design I've ever read. Sending to every junior on my team.</div>
+            </div>
+          </div>
+          <div class="comment-item">
+            <div class="comment-avt"><img src="https://i.pravatar.cc/100?img=55" alt=""/></div>
+            <div class="comment-body">
+              <div class="comment-user">Omar H.</div>
+              <div class="comment-text">Dieter Rams would approve. The courage point is underrated — clients always want to add more.</div>
+            </div>
+          </div>
+          <div class="comment-input-row">
+            <input type="text" placeholder="Add a comment…" id="input-card-3"/>
+            <button class="comment-submit" onclick="addComment('card-3')">Post</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 4 -->
+      <div class="blog-card" id="card-4">
+        <div class="blog-card-inner">
+          <div class="blog-card-meta">
+            <div class="blog-avatar"><img src="https://i.pravatar.cc/100?img=20" alt=""/></div>
+            <span class="blog-author-name">Mia C.</span>
+            <span class="blog-date">· Mar 1, 2025</span>
+            <span class="blog-tag-inline">Health</span>
+          </div>
+          <h3>What six months of walking instead of running taught me about patience</h3>
+          <p>I was a runner for eight years. An injury forced me to slow down. What I found in that slowness changed how I think about ambition, rest, and recovery.</p>
+          <div class="blog-card-footer">
+            <span class="read-time">7 min read</span>
+            <button class="action-btn" onclick="toggleLike(this)">♥ <span>89</span></button>
+            <button class="action-btn" onclick="toggleComments('card-4')">💬 <span>14</span></button>
+          </div>
+        </div>
+        <div class="comments-panel" id="comments-card-4">
+          <div class="comment-head">Comments (14)</div>
+          <div class="comment-item">
+            <div class="comment-avt"><img src="https://i.pravatar.cc/100?img=27" alt=""/></div>
+            <div class="comment-body">
+              <div class="comment-user">Tom R.</div>
+              <div class="comment-text">Going through the same thing right now. This gave me a lot of perspective. Thank you.</div>
+            </div>
+          </div>
+          <div class="comment-input-row">
+            <input type="text" placeholder="Add a comment…" id="input-card-4"/>
+            <button class="comment-submit" onclick="addComment('card-4')">Post</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <!-- end recent blogs -->
+
+  </main>
+
+  <!-- SIDEBAR RIGHT -->
+  <aside class="sidebar-right">
+
+    <!-- PROFILE -->
+    <div class="sidebar-label" style="margin-bottom:0.75rem">Your Profile</div>
+    <div class="profile-card">
+      <div class="profile-img">
+        <img src="https://i.pravatar.cc/100?img=12" alt="Profile"/>
+      </div>
+      <div class="profile-username">Walter Taya</div>
+      <div class="profile-email">walter@blogger.io</div>
+      <p class="profile-desc">Software engineer and occasional writer. Interested in systems, tools for thought, and the quiet moments between big ideas.</p>
+      <div class="profile-stats">
+        <div class="profile-stat">
+          <div class="profile-stat-num">12</div>
+          <div class="profile-stat-label">Posts</div>
+        </div>
+        <div class="profile-stat">
+          <div class="profile-stat-num">348</div>
+          <div class="profile-stat-label">Likes</div>
+        </div>
+        <div class="profile-stat">
+          <div class="profile-stat-num">91</div>
+          <div class="profile-stat-label">Followers</div>
+        </div>
+      </div>
+      <button class="btn-edit-profile">Edit Profile</button>
+    </div>
+
+    <!-- WRITERS TO FOLLOW -->
+    <div class="sidebar-label" style="margin-bottom:0.75rem; margin-top:1.5rem">Writers to follow</div>
+    <div>
+      <div class="writer-item">
+        <div class="writer-avt"><img src="https://i.pravatar.cc/100?img=47" alt=""/></div>
+        <div class="writer-info">
+          <div class="writer-name">Elena Marsh</div>
+          <div class="writer-tag">Writing · Philosophy</div>
+        </div>
+        <button class="btn-follow" onclick="toggleFollow(this)">Follow</button>
+      </div>
+      <div class="writer-item">
+        <div class="writer-avt"><img src="https://i.pravatar.cc/100?img=5" alt=""/></div>
+        <div class="writer-info">
+          <div class="writer-name">Riku Tanaka</div>
+          <div class="writer-tag">Design · Product</div>
+        </div>
+        <button class="btn-follow" onclick="toggleFollow(this)">Follow</button>
+      </div>
+      <div class="writer-item">
+        <div class="writer-avt"><img src="https://i.pravatar.cc/100?img=9" alt=""/></div>
+        <div class="writer-info">
+          <div class="writer-name">Adaeze Nwosu</div>
+          <div class="writer-tag">Culture · Essays</div>
+        </div>
+        <button class="btn-follow" onclick="toggleFollow(this)">Follow</button>
+      </div>
+      <div class="writer-item">
+        <div class="writer-avt"><img src="https://i.pravatar.cc/100?img=20" alt=""/></div>
+        <div class="writer-info">
+          <div class="writer-name">Mia Chen</div>
+          <div class="writer-tag">Health · Lifestyle</div>
+        </div>
+        <button class="btn-follow" onclick="toggleFollow(this)">Follow</button>
+      </div>
+    </div>
+
+  </aside>
+
+</div><!-- end page-wrap -->
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/resources/js/home.js"></script>
+</body>
+</html>

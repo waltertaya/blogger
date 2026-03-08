@@ -470,6 +470,14 @@ func UpdateProfileHandler(w http.ResponseWriter, r *http.Request) {
 		if email := strings.TrimSpace(r.FormValue("email")); email != "" {
 			updates["email"] = email
 		}
+		if _, hasProfileDesc := r.MultipartForm.Value["profile_description"]; hasProfileDesc {
+			description := strings.TrimSpace(r.FormValue("profile_description"))
+			if len(description) > 1000 {
+				http.Error(w, "profile_description cannot exceed 1000 characters", http.StatusBadRequest)
+				return
+			}
+			updates["profile_description"] = description
+		}
 
 		profileFile, profileHeader, fileErr := r.FormFile("profile_image")
 		if fileErr == nil {
@@ -488,8 +496,9 @@ func UpdateProfileHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		var payload struct {
-			Username *string `json:"username"`
-			Email    *string `json:"email"`
+			Username           *string `json:"username"`
+			Email              *string `json:"email"`
+			ProfileDescription *string `json:"profile_description"`
 		}
 
 		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
@@ -512,6 +521,14 @@ func UpdateProfileHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			updates["email"] = email
+		}
+		if payload.ProfileDescription != nil {
+			description := strings.TrimSpace(*payload.ProfileDescription)
+			if len(description) > 1000 {
+				http.Error(w, "profile_description cannot exceed 1000 characters", http.StatusBadRequest)
+				return
+			}
+			updates["profile_description"] = description
 		}
 	}
 

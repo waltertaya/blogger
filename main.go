@@ -44,12 +44,31 @@ func main() {
 	mux.HandleFunc("/api/v1/blogs/like", handlers.LikeBlogHandler)
 	mux.HandleFunc("/api/v1/users/profile", handlers.GetAnotherUserProfileHandler)
 
+	templateResourcesJS := http.StripPrefix("/resources/js/", http.FileServer(http.Dir("templates/resources/js")))
+	mux.Handle("/resources/js/", templateResourcesJS)
+
+	templateResourcesCSS := http.StripPrefix("/resources/css/", http.FileServer(http.Dir("templates/resources/css")))
+	mux.Handle("/resources/css/", templateResourcesCSS)
+
 	resources := http.StripPrefix("/resources/", http.FileServer(http.Dir("internals/resources")))
 	mux.Handle("/resources/", resources)
 
 	handler := middlewares.CORSMiddleware(
 		middlewares.LoggingMiddleware(mux),
 	)
+
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/":
+			http.ServeFile(w, r, "templates/landing.html")
+		case "/auth":
+			http.ServeFile(w, r, "templates/auth.html")
+		case "/home":
+			http.ServeFile(w, r, "templates/home.html")
+		default:
+			http.NotFound(w, r)
+		}
+	})
 
 	logger.Println("Starting the server at http://localhost:8080")
 	err := http.ListenAndServe(":8080", handler)
