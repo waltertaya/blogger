@@ -32,6 +32,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 
 	var user struct {
 		Username string `json:"username"`
+		FullName string `json:"full_name"`
 		Email    string `json:"email"`
 		Password string `json:"password"`
 	}
@@ -51,10 +52,11 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error creating password hash", http.StatusInternalServerError)
 		return
 	}
-	result, err := db.DB.NamedExec("INSERT INTO users (username, email, password) VALUES (:username, :email, :password)", map[string]interface{}{
-		"username": user.Username,
-		"email":    user.Email,
-		"password": string(hashedPassword),
+	result, err := db.DB.NamedExec("INSERT INTO users (username, full_name, email, password) VALUES (:username, :full_name, :email, :password)", map[string]interface{}{
+		"username":  user.Username,
+		"full_name": strings.TrimSpace(user.FullName),
+		"email":     user.Email,
+		"password":  string(hashedPassword),
 	})
 	if err != nil {
 		http.Error(w, "Error inserting user to db", http.StatusInternalServerError)
@@ -96,9 +98,10 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	setAuthCookie(w, token)
 
 	response := map[string]interface{}{
-		"id":       userID,
-		"username": user.Username,
-		"email":    user.Email,
+		"id":        userID,
+		"username":  user.Username,
+		"full_name": strings.TrimSpace(user.FullName),
+		"email":     user.Email,
 	}
 
 	writeJSON(w, http.StatusCreated, response)
@@ -149,6 +152,8 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var userCredential struct {
+		Login    string `json:"login"`
+		Email    string `json:"email"`
 		Username string `json:"username"`
 		Password string `json:"password"`
 	}
@@ -158,14 +163,23 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if userCredential.Username == "" || userCredential.Password == "" {
-		http.Error(w, "username and password are required", http.StatusBadRequest)
+	login := strings.TrimSpace(userCredential.Login)
+	if login == "" {
+		if strings.TrimSpace(userCredential.Email) != "" {
+			login = strings.TrimSpace(userCredential.Email)
+		} else {
+			login = strings.TrimSpace(userCredential.Username)
+		}
+	}
+
+	if login == "" || userCredential.Password == "" {
+		http.Error(w, "login and password are required", http.StatusBadRequest)
 		return
 	}
 
 	var userData models.User
 
-	err := db.DB.Get(&userData, "SELECT * FROM users WHERE username=?", userCredential.Username)
+	err := db.DB.Get(&userData, "SELECT * FROM users WHERE username=? OR email=?", login, login)
 	if err != nil {
 		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
 		return
@@ -289,7 +303,7 @@ func ResetPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = db.DB.Exec("UPDATE users SET password=$1, updated_at=$2 WHERE id=$3", string(hashedPassword), time.Now(), userIDUint)
+	_, err = db.DB.Exec("UPDATE users SET password=?, updated_at=? WHERE id=?", string(hashedPassword), time.Now(), userIDUint)
 	if err != nil {
 		http.Error(w, "Error updating password", http.StatusInternalServerError)
 		return
@@ -328,8 +342,26 @@ func Profile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var postsCount int
+	var totalLikes sql.NullInt64
+	var followersCount int
+	var followingCount int
+
+	_ = db.DB.Get(&postsCount, "SELECT COUNT(*) FROM blogs WHERE author=?", userIDUint)
+	_ = db.DB.Get(&totalLikes, "SELECT COALESCE(SUM(likes), 0) FROM blogs WHERE author=?", userIDUint)
+	_ = db.DB.Get(&followersCount, "SELECT COUNT(*) FROM user_follows WHERE following_id=?", userIDUint)
+	_ = db.DB.Get(&followingCount, "SELECT COUNT(*) FROM user_follows WHERE follower_id=?", userIDUint)
+
 	user.Password = ""
-	writeJSON(w, http.StatusOK, user)
+	writeJSON(w, http.StatusOK, map[string]any{
+		"user": user,
+		"stats": map[string]any{
+			"posts_count":     postsCount,
+			"total_likes":     totalLikes.Int64,
+			"followers_count": followersCount,
+			"following_count": followingCount,
+		},
+	})
 }
 
 func LogoutHandler(w http.ResponseWriter, r *http.Request) {
@@ -405,6 +437,13 @@ func DeactivateAccountHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	_, err = tx.Exec("DELETE FROM user_follows WHERE follower_id=? OR following_id=?", userID, userID)
+	if err != nil {
+		_ = tx.Rollback()
+		http.Error(w, "Error deleting user follow graph", http.StatusInternalServerError)
+		return
+	}
+
 	_, err = tx.Exec("DELETE FROM users WHERE id=?", userID)
 	if err != nil {
 		_ = tx.Rollback()
@@ -470,6 +509,9 @@ func UpdateProfileHandler(w http.ResponseWriter, r *http.Request) {
 		if email := strings.TrimSpace(r.FormValue("email")); email != "" {
 			updates["email"] = email
 		}
+		if _, hasFullName := r.MultipartForm.Value["full_name"]; hasFullName {
+			updates["full_name"] = strings.TrimSpace(r.FormValue("full_name"))
+		}
 		if _, hasProfileDesc := r.MultipartForm.Value["profile_description"]; hasProfileDesc {
 			description := strings.TrimSpace(r.FormValue("profile_description"))
 			if len(description) > 1000 {
@@ -497,6 +539,7 @@ func UpdateProfileHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		var payload struct {
 			Username           *string `json:"username"`
+			FullName           *string `json:"full_name"`
 			Email              *string `json:"email"`
 			ProfileDescription *string `json:"profile_description"`
 		}
@@ -521,6 +564,9 @@ func UpdateProfileHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			updates["email"] = email
+		}
+		if payload.FullName != nil {
+			updates["full_name"] = strings.TrimSpace(*payload.FullName)
 		}
 		if payload.ProfileDescription != nil {
 			description := strings.TrimSpace(*payload.ProfileDescription)
@@ -566,6 +612,96 @@ func UpdateProfileHandler(w http.ResponseWriter, r *http.Request) {
 
 	updatedUser.Password = ""
 	writeJSON(w, http.StatusOK, updatedUser)
+}
+
+func FollowUserHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	followerID, err := currentUserIDFromContext(r)
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	followingID, err := parseUintQueryParam(r, "user_id")
+	if err != nil {
+		http.Error(w, "Invalid user id", http.StatusBadRequest)
+		return
+	}
+
+	if followerID == followingID {
+		http.Error(w, "You cannot follow yourself", http.StatusBadRequest)
+		return
+	}
+
+	_, err = db.DB.Exec("INSERT IGNORE INTO user_follows (follower_id, following_id) VALUES (?, ?)", followerID, followingID)
+	if err != nil {
+		http.Error(w, "Error following user", http.StatusInternalServerError)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]string{"message": "followed successfully"})
+}
+
+func UnfollowUserHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodDelete {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	followerID, err := currentUserIDFromContext(r)
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	followingID, err := parseUintQueryParam(r, "user_id")
+	if err != nil {
+		http.Error(w, "Invalid user id", http.StatusBadRequest)
+		return
+	}
+
+	_, err = db.DB.Exec("DELETE FROM user_follows WHERE follower_id=? AND following_id=?", followerID, followingID)
+	if err != nil {
+		http.Error(w, "Error unfollowing user", http.StatusInternalServerError)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]string{"message": "unfollowed successfully"})
+}
+
+func GetFollowingUsersHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	userID, err := currentUserIDFromContext(r)
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	type followingUser struct {
+		FollowingID uint64 `json:"following_id" db:"following_id"`
+	}
+
+	following := []followingUser{}
+	err = db.DB.Select(&following, "SELECT following_id FROM user_follows WHERE follower_id=?", userID)
+	if err != nil {
+		http.Error(w, "Error fetching following users", http.StatusInternalServerError)
+		return
+	}
+
+	ids := make([]uint64, 0, len(following))
+	for _, row := range following {
+		ids = append(ids, row.FollowingID)
+	}
+
+	writeJSON(w, http.StatusOK, map[string]any{"following_ids": ids})
 }
 
 func currentUserIDFromContext(r *http.Request) (uint64, error) {

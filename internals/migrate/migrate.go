@@ -11,6 +11,7 @@ var schemas = []string{
 	`CREATE TABLE IF NOT EXISTS users (
 		id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
 		username VARCHAR(50) NOT NULL UNIQUE,
+		full_name VARCHAR(120) NULL,
 		email VARCHAR(150) NOT NULL UNIQUE,
 		email_verified_at TIMESTAMP NULL,
 		password VARCHAR(256) NOT NULL,
@@ -19,7 +20,6 @@ var schemas = []string{
 		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMP NULL
 	)`,
-	`ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_description TEXT NULL`,
 	`CREATE TABLE IF NOT EXISTS blogs (
 		id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
 		title TEXT,
@@ -28,6 +28,7 @@ var schemas = []string{
 		author BIGINT UNSIGNED,
 		banner VARCHAR(150),
 		likes INT DEFAULT 0,
+		read_minutes INT DEFAULT 1,
 		published BOOLEAN DEFAULT FALSE,
 		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMP NULL,
@@ -37,9 +38,9 @@ var schemas = []string{
 		id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
 		user_id BIGINT UNSIGNED,
 		code INT NOT NULL,
-		FOREIGN KEY (user_id) REFERENCES users(id)
+		FOREIGN KEY (user_id) REFERENCES users(id),
 		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-		updated_at TIMESTAMP NULL,
+		updated_at TIMESTAMP NULL
 	)`,
 	`CREATE TABLE IF NOT EXISTS blog_comments (
 		id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -51,6 +52,15 @@ var schemas = []string{
 		updated_at TIMESTAMP NULL,
 		FOREIGN KEY (blog_id) REFERENCES blogs(id),
 		FOREIGN KEY (user_id) REFERENCES users(id)
+	)`,
+	`CREATE TABLE IF NOT EXISTS user_follows (
+		id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+		follower_id BIGINT UNSIGNED NOT NULL,
+		following_id BIGINT UNSIGNED NOT NULL,
+		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+		UNIQUE KEY uniq_user_follow (follower_id, following_id),
+		FOREIGN KEY (follower_id) REFERENCES users(id) ON DELETE CASCADE,
+		FOREIGN KEY (following_id) REFERENCES users(id) ON DELETE CASCADE
 	)`,
 }
 

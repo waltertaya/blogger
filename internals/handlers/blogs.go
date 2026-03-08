@@ -4,14 +4,15 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"os"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/waltertaya/blogger/internals/models"
 	"github.com/waltertaya/blogger/internals/db"
+	"github.com/waltertaya/blogger/internals/models"
 )
 
 const (
@@ -66,11 +67,12 @@ func CreateBlogHandler(w http.ResponseWriter, r *http.Request) {
 		Tags:        tags,
 		Author:      uint(userID),
 		Banner:      bannerName,
+		ReadMinutes: estimateReadMinutes(title, description),
 		Published:   published,
 	}
 
-	result, err := db.DB.NamedExec(`INSERT INTO blogs (title, description, tags, author, banner, published)
-		VALUES (:title, :description, :tags, :author, :banner, :published)`, &blog)
+	result, err := db.DB.NamedExec(`INSERT INTO blogs (title, description, tags, author, banner, read_minutes, published)
+		VALUES (:title, :description, :tags, :author, :banner, :read_minutes, :published)`, &blog)
 	if err != nil {
 		http.Error(w, "Error creating blog", http.StatusInternalServerError)
 		return
@@ -194,8 +196,20 @@ func GetTrendingBlogsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	blogs := []models.Blog{}
-	err := db.DB.Select(&blogs, "SELECT * FROM blogs WHERE published=? ORDER BY likes DESC, created_at DESC LIMIT 10", true)
+	type feedBlog struct {
+		models.Blog
+		AuthorName    string `json:"author_name" db:"author_name"`
+		CommentsCount int    `json:"comments_count" db:"comments_count"`
+	}
+
+	blogs := []feedBlog{}
+	err := db.DB.Select(&blogs, `SELECT b.*, COALESCE(NULLIF(u.full_name, ''), u.username) AS author_name,
+		(SELECT COUNT(*) FROM blog_comments bc WHERE bc.blog_id=b.id) AS comments_count
+		FROM blogs b
+		INNER JOIN users u ON u.id=b.author
+		WHERE b.published=?
+		ORDER BY b.likes DESC, b.created_at DESC
+		LIMIT 10`, true)
 	if err != nil {
 		http.Error(w, "Error fetching trending blogs", http.StatusInternalServerError)
 		return
@@ -226,16 +240,97 @@ func GetBlogsByTagHandler(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, blogs)
 }
 
+func SearchBlogsHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	query := strings.TrimSpace(r.URL.Query().Get("q"))
+	if query == "" {
+		writeJSON(w, http.StatusOK, []any{})
+		return
+	}
+
+	type feedBlog struct {
+		models.Blog
+		AuthorName    string `json:"author_name" db:"author_name"`
+		CommentsCount int    `json:"comments_count" db:"comments_count"`
+	}
+
+	blogs := []feedBlog{}
+	err := db.DB.Select(&blogs, `SELECT b.*, COALESCE(NULLIF(u.full_name, ''), u.username) AS author_name,
+		(SELECT COUNT(*) FROM blog_comments bc WHERE bc.blog_id=b.id) AS comments_count
+		FROM blogs b
+		INNER JOIN users u ON u.id=b.author
+		WHERE b.published=? AND (b.title LIKE ? OR b.description LIKE ? OR b.tags LIKE ?)
+		ORDER BY b.created_at DESC
+		LIMIT 50`, true, "%"+query+"%", "%"+query+"%", "%"+query+"%")
+	if err != nil {
+		http.Error(w, "Error searching blogs", http.StatusInternalServerError)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, blogs)
+}
+
 func GetRecentBlogsHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
-	blogs := []models.Blog{}
-	err := db.DB.Select(&blogs, "SELECT * FROM blogs WHERE published=? ORDER BY created_at DESC LIMIT 10", true)
+	type feedBlog struct {
+		models.Blog
+		AuthorName    string `json:"author_name" db:"author_name"`
+		CommentsCount int    `json:"comments_count" db:"comments_count"`
+	}
+
+	blogs := []feedBlog{}
+	err := db.DB.Select(&blogs, `SELECT b.*, COALESCE(NULLIF(u.full_name, ''), u.username) AS author_name,
+		(SELECT COUNT(*) FROM blog_comments bc WHERE bc.blog_id=b.id) AS comments_count
+		FROM blogs b
+		INNER JOIN users u ON u.id=b.author
+		WHERE b.published=?
+		ORDER BY b.created_at DESC
+		LIMIT 10`, true)
 	if err != nil {
 		http.Error(w, "Error fetching recent blogs", http.StatusInternalServerError)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, blogs)
+}
+
+func GetFollowingBlogsHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	userID, err := currentUserIDFromContext(r)
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	type feedBlog struct {
+		models.Blog
+		AuthorName    string `json:"author_name" db:"author_name"`
+		CommentsCount int    `json:"comments_count" db:"comments_count"`
+	}
+
+	blogs := []feedBlog{}
+	err = db.DB.Select(&blogs, `SELECT b.*, COALESCE(NULLIF(u.full_name, ''), u.username) AS author_name,
+		(SELECT COUNT(*) FROM blog_comments bc WHERE bc.blog_id=b.id) AS comments_count
+		FROM blogs b
+		INNER JOIN users u ON u.id=b.author
+		INNER JOIN user_follows uf ON uf.following_id=b.author
+		WHERE uf.follower_id=? AND b.published=?
+		ORDER BY b.created_at DESC
+		LIMIT 20`, userID, true)
+	if err != nil {
+		http.Error(w, "Error fetching following blogs", http.StatusInternalServerError)
 		return
 	}
 
@@ -311,6 +406,38 @@ func CommentOnBlogHandler(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusCreated, map[string]string{"message": "comment added"})
 }
 
+func GetBlogCommentsHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	blogID, err := parseUintQueryParam(r, "id")
+	if err != nil {
+		http.Error(w, "Invalid blog id", http.StatusBadRequest)
+		return
+	}
+
+	type commentResponse struct {
+		models.BlogComments
+		Username string  `json:"username" db:"username"`
+		FullName *string `json:"full_name" db:"full_name"`
+	}
+
+	comments := []commentResponse{}
+	err = db.DB.Select(&comments, `SELECT bc.*, u.username, u.full_name
+		FROM blog_comments bc
+		INNER JOIN users u ON u.id=bc.user_id
+		WHERE bc.blog_id=?
+		ORDER BY bc.created_at DESC`, blogID)
+	if err != nil {
+		http.Error(w, "Error fetching comments", http.StatusInternalServerError)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, comments)
+}
+
 func GetAnotherUserProfileHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -340,10 +467,26 @@ func GetAnotherUserProfileHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var postsCount int
+	var totalLikes sql.NullInt64
+	var followersCount int
+	var followingCount int
+
+	_ = db.DB.Get(&postsCount, "SELECT COUNT(*) FROM blogs WHERE author=?", userID)
+	_ = db.DB.Get(&totalLikes, "SELECT COALESCE(SUM(likes), 0) FROM blogs WHERE author=?", userID)
+	_ = db.DB.Get(&followersCount, "SELECT COUNT(*) FROM user_follows WHERE following_id=?", userID)
+	_ = db.DB.Get(&followingCount, "SELECT COUNT(*) FROM user_follows WHERE follower_id=?", userID)
+
 	user.Password = ""
 	writeJSON(w, http.StatusOK, map[string]any{
 		"user":  user,
 		"blogs": blogs,
+		"stats": map[string]any{
+			"posts_count":     postsCount,
+			"total_likes":     totalLikes.Int64,
+			"followers_count": followersCount,
+			"following_count": followingCount,
+		},
 	})
 }
 
@@ -459,6 +602,16 @@ func UpdateBlogHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	newTitle := currentBlog.Title
+	if title, ok := updates["title"].(string); ok {
+		newTitle = title
+	}
+	newDescription := currentBlog.Description
+	if description, ok := updates["description"].(string); ok {
+		newDescription = description
+	}
+	updates["read_minutes"] = estimateReadMinutes(newTitle, newDescription)
+
 	queryParts := []string{}
 	args := []any{}
 	for key, value := range updates {
@@ -569,4 +722,22 @@ func parseUintQueryParam(r *http.Request, key string) (uint64, error) {
 	}
 
 	return parsed, nil
+}
+
+func estimateReadMinutes(title, description string) int {
+	combined := strings.TrimSpace(fmt.Sprintf("%s %s", title, description))
+	if combined == "" {
+		return 1
+	}
+
+	wordCount := len(strings.Fields(combined))
+	minutes := wordCount / 200
+	if wordCount%200 != 0 {
+		minutes++
+	}
+	if minutes < 1 {
+		minutes = 1
+	}
+
+	return minutes
 }

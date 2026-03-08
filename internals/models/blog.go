@@ -8,6 +8,7 @@ type Blog struct {
 	Author      uint    `json:"author" db:"author"`
 	Banner      string  `json:"banner" db:"banner"`
 	Likes       int     `json:"likes" db:"likes"`
+	ReadMinutes int     `json:"read_minutes" db:"read_minutes"`
 	Published   bool    `json:"published" db:"published"`
 	CreatedAt   string  `json:"created_at" db:"created_at"`
 	UpdatedAt   *string `json:"updated_at,omitempty" db:"updated_at"`
