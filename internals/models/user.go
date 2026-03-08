@@ -9,3 +9,11 @@ type User struct {
 	CreatedAt       string  `json:"created_at" db:"created_at"`
 	UpdatedAt       *string `json:"updated_at,omitempty" db:"updated_at"`
 }
+
+type VerificationCode struct {
+	ID        uint    `json:"id" db:"id"`
+	UserID    uint    `json:"user_id" db:"user_id"`
+	Code      int     `json:"code" db:"code"`
+	CreatedAt string  `json:"created_at" db:"created_at"`
+	UpdatedAt *string `json:"updated_at,omitempty" db:"updated_at"`
+}

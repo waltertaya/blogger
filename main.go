@@ -20,6 +20,12 @@ func main() {
 	logger := log.New(os.Stdout, "http: ", log.LstdFlags)
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/v1/health", handlers.HealthHandler)
+	mux.HandleFunc("/api/v1/register", handlers.RegisterHandler)
+	mux.HandleFunc("/api/v1/verify", handlers.VerifyEmailHandler)
+	mux.HandleFunc("/api/v1/login", handlers.LoginHandler)
+	mux.HandleFunc("/api/v1/request-verification", handlers.RequestNewEmailVerification)
+	mux.Handle("/api/v1/reset-password", middlewares.AuthMiddleware(http.HandlerFunc(handlers.ResetPassword)))
+	mux.Handle("/api/v1/me", middlewares.AuthMiddleware(http.HandlerFunc(handlers.Profile)))
 
 	handler := middlewares.CORSMiddleware(
 		middlewares.LoggingMiddleware(mux),

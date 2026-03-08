@@ -29,6 +29,14 @@ var schemas = []string{
 		updated_at TIMESTAMP NULL,
 		FOREIGN KEY (author) REFERENCES users(id)
 	)`,
+	`CREATE TABLE IF NOT EXISTS verification_codes (
+		id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+		user_id BIGINT UNSIGNED,
+		code INT NOT NULL,
+		FOREIGN KEY (user_id) REFERENCES users(id)
+		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+		updated_at TIMESTAMP NULL,
+	)`,
 }
 
 func main() {
