@@ -184,22 +184,21 @@ func RequestNewEmailVerification(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var body struct {
-		Email string `json:"email"`
-	}
-
-	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, "Invalid json", http.StatusBadRequest)
+	userIDValue := r.Context().Value("userID")
+	userIDStr, ok := userIDValue.(string)
+	if !ok || userIDStr == "" {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
-	if body.Email == "" {
-		http.Error(w, "email is required", http.StatusBadRequest)
+	userIDUint, err := strconv.ParseUint(userIDStr, 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid user id in token", http.StatusUnauthorized)
 		return
 	}
 
 	var user models.User
-	err := db.DB.Get(&user, "SELECT * FROM users WHERE email=$1", body.Email)
+	err = db.DB.Get(&user, "SELECT * FROM users WHERE id=$1", userIDUint)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			http.Error(w, "user not found", http.StatusNotFound)
@@ -322,6 +321,16 @@ func Profile(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, user)
 }
 
+func LogoutHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	clearAuthCookie(w)
+	writeJSON(w, http.StatusOK, map[string]string{"message": "logged out successfully"})
+}
+
 func writeJSON(w http.ResponseWriter, statusCode int, data interface{}) {
 	jsonData, err := json.Marshal(data)
 	if err != nil {
@@ -343,6 +352,20 @@ func setAuthCookie(w http.ResponseWriter, token string) {
 		Secure:   false, // true for https
 		Path:     "/",
 		MaxAge:   86400,
+	}
+
+	http.SetCookie(w, &cookie)
+}
+
+func clearAuthCookie(w http.ResponseWriter) {
+	cookie := http.Cookie{
+		Name:     "auth_token",
+		Value:    "",
+		HttpOnly: true,
+		Secure:   false, // true for https
+		Path:     "/",
+		MaxAge:   -1,
+		Expires:  time.Unix(0, 0),
 	}
 
 	http.SetCookie(w, &cookie)

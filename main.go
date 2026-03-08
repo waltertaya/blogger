@@ -23,7 +23,8 @@ func main() {
 	mux.HandleFunc("/api/v1/register", handlers.RegisterHandler)
 	mux.HandleFunc("/api/v1/verify", handlers.VerifyEmailHandler)
 	mux.HandleFunc("/api/v1/login", handlers.LoginHandler)
-	mux.HandleFunc("/api/v1/request-verification", handlers.RequestNewEmailVerification)
+	mux.HandleFunc("/api/v1/logout", handlers.LogoutHandler)
+	mux.Handle("/api/v1/request-verification", middlewares.AuthMiddleware(http.HandlerFunc(handlers.RequestNewEmailVerification)))
 	mux.Handle("/api/v1/reset-password", middlewares.AuthMiddleware(http.HandlerFunc(handlers.ResetPassword)))
 	mux.Handle("/api/v1/me", middlewares.AuthMiddleware(http.HandlerFunc(handlers.Profile)))
 
